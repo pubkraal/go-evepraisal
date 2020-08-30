@@ -11,8 +11,8 @@ import (
 
 	"github.com/davecgh/go-spew/spew"
 	"github.com/dustin/go-humanize"
-	"github.com/pubkraal/go-evepraisal"
 	"github.com/pquerna/ffjson/ffjson"
+	"github.com/pubkraal/go-evepraisal"
 )
 
 var spewConfig = spew.ConfigState{Indent: "    ", SortKeys: true}
@@ -100,7 +100,7 @@ func (ctx *Context) renderWithRoot(r *http.Request, w http.ResponseWriter, templ
 		}
 	} else {
 		root.UI.Path = r.URL.Path
-		root.UI.SelectedMarket = ctx.getSessionValueWithDefault(r, "market", "jita")
+		root.UI.SelectedMarket = ctx.getSessionValueWithDefault(r, "market", "1DQ1-A")
 		root.UI.Markets = selectableMarkets
 		root.UI.SelectedVisibility = ctx.getSessionValueWithDefault(r, "visibility", "public")
 		root.UI.Visibilities = selectableVisibilities
