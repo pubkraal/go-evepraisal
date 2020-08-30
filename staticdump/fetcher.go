@@ -7,8 +7,8 @@ import (
 	"sync"
 	"time"
 
-	"github.com/evepraisal/go-evepraisal/bolt"
-	"github.com/evepraisal/go-evepraisal/typedb"
+	"github.com/pubkraal/go-evepraisal/bolt"
+	"github.com/pubkraal/go-evepraisal/typedb"
 	"github.com/sethgrid/pester"
 )
 

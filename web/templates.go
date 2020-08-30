@@ -11,7 +11,7 @@ import (
 
 	"github.com/davecgh/go-spew/spew"
 	"github.com/dustin/go-humanize"
-	"github.com/evepraisal/go-evepraisal"
+	"github.com/pubkraal/go-evepraisal"
 	"github.com/pquerna/ffjson/ffjson"
 )
 

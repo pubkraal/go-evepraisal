@@ -11,7 +11,7 @@ import (
 	"os"
 	"strings"
 
-	"github.com/evepraisal/go-evepraisal/typedb"
+	"github.com/pubkraal/go-evepraisal/typedb"
 	"github.com/sethgrid/pester"
 )
 
