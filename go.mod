@@ -1,4 +1,4 @@
-module github.com/evepraisal/go-evepraisal
+module github.com/pubkraal/go-evepraisal
 
 require (
 	github.com/BurntSushi/toml v0.3.0 // indirect
