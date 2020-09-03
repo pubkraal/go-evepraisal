@@ -11,6 +11,12 @@ import (
 	"strings"
 	"time"
 
+	"github.com/go-redis/redis/v7"
+
+	"github.com/gorilla/securecookie"
+	"github.com/gorilla/sessions"
+	"github.com/gregjones/httpcache"
+	newrelic "github.com/newrelic/go-agent"
 	"github.com/pubkraal/go-evepraisal"
 	"github.com/pubkraal/go-evepraisal/bolt"
 	"github.com/pubkraal/go-evepraisal/esi"
@@ -19,10 +25,6 @@ import (
 	"github.com/pubkraal/go-evepraisal/staticdump"
 	"github.com/pubkraal/go-evepraisal/typedb"
 	"github.com/pubkraal/go-evepraisal/web"
-	"github.com/gorilla/securecookie"
-	"github.com/gorilla/sessions"
-	"github.com/gregjones/httpcache"
-	newrelic "github.com/newrelic/go-agent"
 	"github.com/sethgrid/pester"
 	"github.com/spf13/viper"
 	"golang.org/x/crypto/acme/autocert"
@@ -66,8 +68,18 @@ func appMain() {
 	httpClient.MaxRetries = 10
 	httpClient.LogHook = func(e pester.ErrEntry) { log.Println(httpClient.FormatError(e)) }
 
+	redisClient := redis.NewClient(&redis.Options{
+		Addr:     viper.GetString("redis_host"),
+		Password: "", // no password set
+		DB:       0,  // use default DB
+	})
+	_, err = redisClient.Ping().Result()
+	if err != nil {
+		log.Fatalf("Could not ping redis: %v", err)
+	}
+
 	fetcherCtx, fetcherCancel := context.WithCancel(context.Background())
-	priceFetcher, err := esi.NewPriceFetcher(fetcherCtx, priceDB, viper.GetString("esi_baseurl"), httpClient)
+	priceFetcher, err := esi.NewPriceFetcher(fetcherCtx, priceDB, viper.GetString("esi_baseurl"), redisClient, httpClient)
 	if err != nil {
 		log.Fatalf("Couldn't start price fetcher: %s", err)
 	}

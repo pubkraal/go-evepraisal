@@ -4,6 +4,7 @@ management_addr="127.0.0.1:8090"
 http_redirect=false
 letsencrypt_email=""
 https_domain-whitelist=["evepraisal.com"]
+redis_host="127.0.0.1:6379"
 
 base-url="http://127.0.0.1:8080"
 
@@ -20,3 +21,4 @@ esi_baseurl="https://esi.evetech.net/latest"
 sso-authorize-url="https://login.eveonline.com/oauth/authorize"
 sso-verify-url="https://login.eveonline.com/oauth/verify"
 sso-token-url="https://login.eveonline.com/oauth/token"
+auth_token=""

@@ -8,9 +8,12 @@ import (
 	"sync"
 	"time"
 
+	"github.com/go-redis/redis/v7"
 	"github.com/pubkraal/go-evepraisal"
 	"github.com/sethgrid/pester"
 )
+
+type ContextKey string
 
 // MarketOrder represents a market order in ESI
 type MarketOrder struct {
@@ -33,58 +36,69 @@ var SpecialRegions = []struct {
 	name     string
 	stations []int64
 	systems  []int64
+	regionID int64
+	private  bool
 }{
 	{
-		// 10000060
-		name:    "1DQ1-A",
-		systems: []int64{30004759},
+		regionID: 10000060,
+		name:     "1DQ1-A",
+		stations: []int64{1030049082711},
+		private:  true,
 	},
 	{
-		// 10000002
-		name:    "jita",
-		systems: []int64{30000142},
+		regionID: 10000002,
+		name:     "jita",
+		systems:  []int64{30000142},
 	}, {
-		// 10000043
+		regionID: 10000043,
 		name:     "amarr",
 		stations: []int64{60008950, 60002569, 60008494},
 	}, {
-		// 10000032
+		regionID: 10000032,
 		name:     "dodixie",
 		stations: []int64{60011866, 60001867},
 	}, {
-		// 10000042
+		regionID: 10000042,
 		name:     "hek",
 		stations: []int64{60005236, 60004516, 60015140, 60005686, 60011287, 60005236},
 	}, {
-		// 10000030
-		name:    "rens",
-		systems: []int64{30002510, 30002526},
+		regionID: 10000030,
+		name:     "rens",
+		systems:  []int64{30002510, 30002526},
 	},
 }
 
 // PriceFetcher fetches prices and populates the given priceDB
 type PriceFetcher struct {
-	db      evepraisal.PriceDB
-	client  *pester.Client
-	baseURL string
+	db        evepraisal.PriceDB
+	client    *pester.Client
+	baseURL   string
+	authToken string
+	redis     *redis.Client
 
 	ctx  context.Context
 	stop chan bool
 	wg   *sync.WaitGroup
+
+	structureMap map[int64]int64
 }
 
 // NewPriceFetcher returns a new PriceFetcher
-func NewPriceFetcher(ctx context.Context, priceDB evepraisal.PriceDB, baseURL string, client *pester.Client) (*PriceFetcher, error) {
-
+func NewPriceFetcher(ctx context.Context, priceDB evepraisal.PriceDB, baseURL string, redisClient *redis.Client, client *pester.Client) (*PriceFetcher, error) {
 	p := &PriceFetcher{
 		db:      priceDB,
 		client:  client,
 		baseURL: baseURL,
+		redis:   redisClient,
 
 		ctx:  ctx,
 		stop: make(chan bool),
 		wg:   &sync.WaitGroup{},
+
+		structureMap: make(map[int64]int64),
 	}
+
+	p.structureMap[1030049082711] = 30004759
 
 	p.wg.Add(1)
 	go func() {
@@ -121,7 +135,7 @@ func regionNames() []string {
 
 func (p *PriceFetcher) runOnce() {
 	log.Println("Fetch market data")
-	priceMap, err := p.FetchOrderData(p.client, p.baseURL, []int{10000002, 10000042, 10000027, 10000032, 10000043, 10000030, 10000060})
+	priceMap, err := p.FetchOrderData(p.client, p.baseURL, []int{10000002, 10000042, 10000027, 10000032, 10000043, 10000030, 10000060}, []int{1030049082711})
 	if err != nil {
 		log.Println("ERROR: fetching market data: ", err)
 		return
@@ -206,7 +220,8 @@ func (p *PriceFetcher) FetchPriceData(client *pester.Client, baseURL string) (ma
 		AveragePrice  float64 `json:"average_price"`
 		AdjustedPrice float64 `json:"adjusted_price"`
 	}, 0)
-	err := fetchURL(p.ctx, client, url, &esiPrices)
+	f := NewHTTPHelp(p.ctx, p.redis, client)
+	err := f.FetchURL(false, url, &esiPrices)
 	if err != nil {
 		return nil, err
 	}
@@ -236,7 +251,7 @@ func (p *PriceFetcher) FetchPriceData(client *pester.Client, baseURL string) (ma
 }
 
 // FetchOrderData concurrently fetches from each region that we care about
-func (p *PriceFetcher) FetchOrderData(client *pester.Client, baseURL string, regionIDs []int) (map[string]map[int64]evepraisal.Prices, error) {
+func (p *PriceFetcher) FetchOrderData(client *pester.Client, baseURL string, regionIDs, structureIDs []int) (map[string]map[int64]evepraisal.Prices, error) {
 	allOrdersByType := make(map[int64][]MarketOrder)
 	finished := make(chan bool, 1)
 	workerStop := make(chan bool, 1)
@@ -244,15 +259,24 @@ func (p *PriceFetcher) FetchOrderData(client *pester.Client, baseURL string, reg
 	fetchStart := time.Now()
 
 	l := &sync.Mutex{}
-	requestAndProcess := func(url string) (bool, error) {
+	requestAndProcess := func(needauth bool, url string) (bool, error) {
 		var orders []MarketOrder
-		err := fetchURL(p.ctx, client, url, &orders)
+		f := NewHTTPHelp(p.ctx, p.redis, client)
+		err := f.FetchURL(needauth, url, &orders)
 		if err != nil {
 			return false, err
 		}
 
 		l.Lock()
 		for _, order := range orders {
+			// For structures we have to force a system_id to be included.
+			if order.SystemID == 0 {
+				sid, ok := p.structureMap[order.StationID]
+				if !ok {
+					continue
+				}
+				order.SystemID = sid
+			}
 			allOrdersByType[order.Type] = append(allOrdersByType[order.Type], order)
 		}
 		l.Unlock()
@@ -276,7 +300,7 @@ func (p *PriceFetcher) FetchOrderData(client *pester.Client, baseURL string, reg
 				}
 
 				url := fmt.Sprintf("%s/markets/%d/orders/?datasource=tranquility&order_type=all&page=%d", baseURL, regionID, page)
-				hasMore, err := requestAndProcess(url)
+				hasMore, err := requestAndProcess(false, url)
 				if err != nil {
 					errChannel <- fmt.Errorf("Failed to fetch market orders: %s (%s)", err, url)
 					return
@@ -288,6 +312,32 @@ func (p *PriceFetcher) FetchOrderData(client *pester.Client, baseURL string, reg
 				page++
 			}
 		}(regionID)
+	}
+
+	for _, structureID := range structureIDs {
+		wg.Add(1)
+		go func(structureID int) {
+			defer wg.Done()
+			page := 1
+			for {
+				select {
+				case <-workerStop:
+					return
+				default:
+				}
+
+				url := fmt.Sprintf("%s/markets/structures/%d?datasource=tranquility&page=%d", baseURL, structureID, page)
+				hasMore, err := requestAndProcess(true, url)
+				if err != nil {
+					errChannel <- fmt.Errorf("Failed to fetch structure market orders: %s (%s)", err, url)
+					return
+				}
+				if !hasMore {
+					break
+				}
+				page++
+			}
+		}(structureID)
 	}
 
 	go func() {
