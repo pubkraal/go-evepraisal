@@ -5,6 +5,7 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
+	"log"
 	"net/http"
 	"time"
 
@@ -35,17 +36,17 @@ func NewHTTPHelp(ctx context.Context, redisClient *redis.Client, client *pester.
 
 func (h *HTTPHelp) FetchURL(needauth bool, url string, r interface{}) error {
 	// log.Printf("Fetching %s", url)
-	req, err := http.NewRequest("GET", url, nil)
-	if err != nil {
-		return err
-	}
-
 	for i := 0; i < 2; i++ {
+		req, err := http.NewRequest("GET", url, nil)
+		if err != nil {
+			return err
+		}
 		req.Header.Add("User-Agent", "pubkraal/go-evepraisal")
 
 		if needauth {
 			authToken, err := h.getAccessToken()
 			if err != nil {
+				log.Printf("Error getting access token: %s", err)
 				rerr := h.refreshAuth()
 				if rerr != nil {
 					return rerr
@@ -89,7 +90,7 @@ func (h *HTTPHelp) refreshAuth() error {
 	}
 
 	requestBody, err := json.Marshal(map[string]string{
-		"grant_type":    "authorizatoin_code",
+		"grant_type":    "refresh_token",
 		"refresh_token": refreshToken,
 	})
 	if err != nil {
@@ -111,6 +112,7 @@ func (h *HTTPHelp) refreshAuth() error {
 
 	req.Header.Add("User-Agent", "pubkraal/go-evepraisal")
 	req.Header.Add("Authorization", fmt.Sprintf("Basic %s", APIAuth))
+	req.Header.Add("Content-Type", "application/json")
 
 	resp, err := h.client.Do(req.WithContext(h.ctx))
 	if err != nil {
