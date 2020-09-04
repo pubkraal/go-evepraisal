@@ -12,8 +12,8 @@ import (
 	"time"
 
 	"github.com/boltdb/bolt"
-	"github.com/pubkraal/go-evepraisal"
 	"github.com/golang/snappy"
+	"github.com/pubkraal/go-evepraisal"
 )
 
 var expireCheckDuration = time.Hour * 24 * 80
@@ -69,7 +69,7 @@ func NewAppraisalDB(filename string) (evepraisal.AppraisalDB, error) {
 			return err
 		}
 
-		b, err = tx.CreateBucket([]byte("stats"))
+		_, err = tx.CreateBucket([]byte("stats"))
 		if err == nil {
 			err = putTotalAppraisals(tx, totalAppraisals)
 			log.Printf("Stats bucket created at total_appraisals=%d", totalAppraisals)

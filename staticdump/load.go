@@ -17,7 +17,7 @@ import (
 
 var userAgent = "go-evepraisal"
 
-func FindLastStaticDumpUrl(client *pester.Client) (string, error) {
+func FindLastStaticDumpURL(client *pester.Client) (string, error) {
 	return "https://eve-static-data-export.s3-eu-west-1.amazonaws.com/tranquility/sde.zip", nil
 }
 
@@ -53,10 +53,10 @@ func FindLastStaticDumpChecksum(client *pester.Client) (string, error) {
 
 func downloadTypes(client *pester.Client, staticDumpURL string, staticDataPath string) error {
 	out, err := os.Create(staticDataPath)
-	defer out.Close()
 	if err != nil {
 		return err
 	}
+	defer out.Close()
 
 	req, err := http.NewRequest("GET", staticDumpURL, nil)
 	if err != nil {

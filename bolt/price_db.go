@@ -7,8 +7,8 @@ import (
 	"time"
 
 	"github.com/boltdb/bolt"
-	"github.com/pubkraal/go-evepraisal"
 	"github.com/golang/snappy"
+	"github.com/pubkraal/go-evepraisal"
 )
 
 // PriceDB stores the market prices for items

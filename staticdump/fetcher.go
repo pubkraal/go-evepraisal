@@ -69,7 +69,7 @@ func (f *StaticFetcher) RunOnce() error {
 		return err
 	}
 
-	staticDumpURL, err := FindLastStaticDumpUrl(f.client)
+	staticDumpURL, err := FindLastStaticDumpURL(f.client)
 	if err != nil {
 		// TODO: fallback to previously downloaded static data
 		return err
@@ -137,7 +137,7 @@ func (f *StaticFetcher) loadTypes(staticCacheFile string, staticDumpURL string) 
 	}
 	finished := false
 	defer func() {
-		if finished == true {
+		if finished {
 			typeDB.Close()
 		} else {
 			log.Println("Deleting new typedb because it was stopped before finishing")

@@ -4,9 +4,9 @@ import (
 	"errors"
 	"net/http"
 
+	newrelic "github.com/newrelic/go-agent"
 	"github.com/pubkraal/go-evepraisal/parsers"
 	"github.com/pubkraal/go-evepraisal/typedb"
-	newrelic "github.com/newrelic/go-agent"
 )
 
 // App holds references to all of the app state that's needed. This is typically created in the 'evepraisal' package.

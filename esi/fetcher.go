@@ -70,11 +70,10 @@ var SpecialRegions = []struct {
 
 // PriceFetcher fetches prices and populates the given priceDB
 type PriceFetcher struct {
-	db        evepraisal.PriceDB
-	client    *pester.Client
-	baseURL   string
-	authToken string
-	redis     *redis.Client
+	db      evepraisal.PriceDB
+	client  *pester.Client
+	baseURL string
+	redis   *redis.Client
 
 	ctx  context.Context
 	stop chan bool

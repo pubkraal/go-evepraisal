@@ -650,15 +650,3 @@ func filterUnparsed(unparsed map[int]string) map[int]string {
 	}
 	return unparsed
 }
-
-func priceByComponents(t typedb.EveType, priceDB PriceDB, market string) Prices {
-	var prices Prices
-	for _, component := range t.Components {
-		p, ok := priceDB.GetPrice(market, component.TypeID)
-		if !ok {
-			continue
-		}
-		prices = prices.Add(p.Mul(float64(component.Quantity)))
-	}
-	return prices
-}

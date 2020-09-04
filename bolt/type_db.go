@@ -16,8 +16,8 @@ import (
 	// Imported to register boltdb with bleve
 	_ "github.com/blevesearch/bleve/index/store/boltdb"
 	"github.com/boltdb/bolt"
-	"github.com/pubkraal/go-evepraisal/typedb"
 	"github.com/golang/snappy"
+	"github.com/pubkraal/go-evepraisal/typedb"
 )
 
 // TypeDB holds all EveTypes

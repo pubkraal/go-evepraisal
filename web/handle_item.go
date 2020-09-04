@@ -5,9 +5,9 @@ import (
 	"net/url"
 	"strconv"
 
+	"github.com/go-zoo/bone"
 	evepraisal "github.com/pubkraal/go-evepraisal"
 	"github.com/pubkraal/go-evepraisal/typedb"
-	"github.com/go-zoo/bone"
 )
 
 type viewItemMarketSummary struct {

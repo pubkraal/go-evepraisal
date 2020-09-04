@@ -67,7 +67,7 @@ func RestoreLegacyFile(saver func(*evepraisal.Appraisal) error, typeDB typedb.Ty
 		if err != nil {
 			log.Printf("WARN: Could not parse price table (%s): %s", record[4], err)
 		}
-		priceMap := make(map[int64]Prices, 0)
+		priceMap := make(map[int64]Prices)
 		for _, priceTuple := range priceBase {
 			if len(priceTuple) != 2 {
 				log.Printf("WARN: Could not parse price table (%s): %s", spew.Sdump(priceTuple), err)

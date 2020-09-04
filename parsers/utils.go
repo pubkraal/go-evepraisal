@@ -67,7 +67,7 @@ func ToFloat64(s string) float64 {
 	}
 
 	whole, decimal := splitDecimal(s)
-	f, _ = strconv.ParseFloat(fmt.Sprintf("%d.%s", ToInt(string(whole)), string(decimal)), 64)
+	f, _ = strconv.ParseFloat(fmt.Sprintf("%d.%s", ToInt(whole), decimal), 64)
 
 	return f
 }

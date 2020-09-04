@@ -17,11 +17,11 @@ import (
 	"time"
 
 	"github.com/davecgh/go-spew/spew"
+	"github.com/go-zoo/bone"
+	"github.com/mssola/user_agent"
 	"github.com/pubkraal/go-evepraisal"
 	"github.com/pubkraal/go-evepraisal/legacy"
 	"github.com/pubkraal/go-evepraisal/parsers"
-	"github.com/go-zoo/bone"
-	"github.com/mssola/user_agent"
 )
 
 var (
@@ -96,14 +96,14 @@ func normalAppraisalLink(appraisal *evepraisal.Appraisal) string {
 
 func rawAppraisalLink(appraisal *evepraisal.Appraisal) string {
 	u := makeAppraisalURL(appraisal)
-	u.Path = u.Path + ".raw"
+	u.Path += ".raw"
 	maybeAddLiveParam(appraisal, u)
 	return u.String()
 }
 
 func jsonAppraisalLink(appraisal *evepraisal.Appraisal) string {
 	u := makeAppraisalURL(appraisal)
-	u.Path = u.Path + ".json"
+	u.Path += ".json"
 	maybeAddLiveParam(appraisal, u)
 	return u.String()
 }

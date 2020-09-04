@@ -50,9 +50,8 @@ func (h *HTTPHelp) FetchURL(needauth bool, url string, r interface{}) error {
 				rerr := h.refreshAuth()
 				if rerr != nil {
 					return rerr
-				} else {
-					continue
 				}
+				continue
 			}
 			req.Header.Add("Authorization", fmt.Sprintf("Bearer %s", authToken))
 		}
