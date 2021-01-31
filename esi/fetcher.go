@@ -267,6 +267,10 @@ func (p *PriceFetcher) FetchOrderData(client *pester.Client, baseURL string, reg
 			return false, err
 		}
 
+		if len(orders) == 0 {
+			return false, nil
+		}
+
 		l.Lock()
 		for _, order := range orders {
 			// For structures we have to force a system_id to be included.
@@ -280,9 +284,6 @@ func (p *PriceFetcher) FetchOrderData(client *pester.Client, baseURL string, reg
 			allOrdersByType[order.Type] = append(allOrdersByType[order.Type], order)
 		}
 		l.Unlock()
-		if len(orders) == 0 {
-			return false, nil
-		}
 		return true, nil
 	}
 

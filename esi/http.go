@@ -64,10 +64,10 @@ func (h *HTTPHelp) FetchURL(needauth bool, url string, r interface{}) error {
 
 		switch resp.StatusCode {
 		case 200:
-		case 404:
 			err = json.NewDecoder(resp.Body).Decode(r)
 			return err
-			// nothing
+		case 404:
+			return nil
 		case 403:
 			if needauth {
 				err := h.refreshAuth()
